@@ -5,6 +5,22 @@ For more information, see the README.md file.
 """
 
 
+def find_kmers(reads: list[str], k: int) -> list[str]:
+    """
+    Find all k-mers in a list of reads.
+    args:
+        reads: list[str] - list of reads
+        k: int - the length of each k-mer
+    returns:
+        list[str] - a list of all k-mers in the reads
+    """
+    kmers: list[str] = []
+    for read in reads:
+        for i in range(len(read) - k + 1):
+            kmer = read[i:i+k]
+            kmers.append(kmer)
+    return kmers
+
 def kmers_in_contig(contig: str, k: int) -> set[str]:
     """
     Find all k-mers in a contig.
@@ -19,6 +35,8 @@ def kmers_in_contig(contig: str, k: int) -> set[str]:
         kmer = contig[i:i+k]
         result.add(kmer)
     return result
+
+
 def most_common_kmers(kmers: list[str])-> dict[str, int]:
     """    
     Find the most common kemers from a list of kmers
@@ -28,6 +46,7 @@ def most_common_kmers(kmers: list[str])-> dict[str, int]:
     returns:
         dict[str, int] - dictionary of kmers and their counts
     """
+
     most_common_kmers ={}
     for kmer in kmers:
         if kmer in most_common_kmers:
@@ -138,8 +157,8 @@ def save_contigs(contigs: list[str], filepath: str) -> None:
     return None
 if __name__ == "__main__":
     k = 3  # Example k-mer length
-    kmers_list = most_common_kmers(load_reads("reads.fastq"))   
+    kmers_list = find_kmers(load_reads("reads.fastq"), k)
 
-    results = expand(kmers_list, k)
+    results = expand(most_common_kmers(kmers_list), k)
     print(f"Results: {results}")
     save_contigs(results, "contigs.fasta")
