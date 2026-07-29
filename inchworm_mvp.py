@@ -1,16 +1,25 @@
-reads = ["ATGGC", "TGGCA", "GGCAT"]
-k = 3
-kmers: list[str] =[]
-for read in reads:
-    for i in range(len(read)-k +1):
-        kmers.append(read[i:i+k])
+"""
+This module contains functions for assembling contigs from reads using k-mers.
+By Anders Ekergård, 2026
+For more information, see the README.md file.
+"""
+
+
 def kmers_in_contig(contig: str, k: int) -> set[str]:
+    """
+    Find all k-mers in a contig.
+    args:
+        contig: str - the contig sequence
+        k: int - the length of each k-mer
+    returns:
+        set[str] - a set of all k-mers in the contig
+    """
     result: set[str] = set()
     for i in range(len(contig) - k + 1):
         kmer = contig[i:i+k]
         result.add(kmer)
     return result
-def most_common_kmers(kmers: list[str])-> dict[str, int]: # type: ignore
+def most_common_kmers(kmers: list[str])-> dict[str, int]:
     """    
     Find the most common kemers from a list of kmers
     args:
@@ -30,8 +39,15 @@ def most_common_kmers(kmers: list[str])-> dict[str, int]: # type: ignore
 
 def expand_forward(kmers_count: dict [str, int], contig: str, k: int)-> str:
     """
+
     Expand in the contig by finding the next kmer that overlaps with the current kmer.
     Each k-mer is used at most once so the assembly cannot get stuck in a cycle.
+    args:
+        kmers_count: dict[str, int] - dictionary of kmers and their counts
+        contig: str - the current contig sequence
+        k: int - the length of each k-mer
+    returns:
+        str - the expanded contig sequence
     """
     if not kmers_count:
         return ""
@@ -58,6 +74,12 @@ def expand_backward(kmers_count: dict [str, int], contig: str, k: int)->str:
     """
     Expand in the contig by finding the next kmer that overlaps with the current kmer.
     Each k-mer is used at most once so the assembly cannot get stuck in a cycle.
+    args:
+        kmers_count: dict[str, int] - dictionary of kmers and their counts
+        contig: str - the current contig sequence
+        k: int - the length of each k-mer
+    returns:
+        str - the expanded contig sequence
     """
     used_kmers: set[str] = set()
     while True:
@@ -76,6 +98,11 @@ def expand_backward(kmers_count: dict [str, int], contig: str, k: int)->str:
 def expand(kmers_count: dict[str, int], k: int) -> list[str]:
     """
     Expand the contig by finding the next kmer that overlaps with the current kmer.
+    args:
+        kmers_count: dict[str, int] - dictionary of kmers and their counts
+        k: int - the length of each k-mer
+    returns:
+        list[str] - a list of expanded contig sequences
     """
     used_kmers: set[str] = set()
     contigs: list[str] = []
@@ -90,8 +117,29 @@ def expand(kmers_count: dict[str, int], k: int) -> list[str]:
         available = {kmer: c for kmer, c in kmers_count.items() if kmer not in used_kmers}
 
     return contigs
+def load_reads(filepath: str) -> list[str]:
+    """
+    Load reads from a FASTQ file.
+    """
+    reads: list[str] = []
+    with open(filepath) as f:
+        for index, seq in enumerate(f):
+            if index % 4 == 1:
+                reads.append(seq.strip())
+    return reads
+
+def save_contigs(contigs: list[str], filepath: str) -> None:
+    """
+    Save contigs to a FASTA file.
+    """
+    with open(filepath, "w") as f: 
+        for index, seq in enumerate(contigs):
+            f.write(f">contig_{index}\n{seq}\n")
+    return None
 if __name__ == "__main__":
-    kmers_list = most_common_kmers(kmers)
-    print(f"Most common kmers: {kmers_list}")
+    k = 3  # Example k-mer length
+    kmers_list = most_common_kmers(load_reads("reads.fastq"))   
+
     results = expand(kmers_list, k)
     print(f"Results: {results}")
+    save_contigs(results, "contigs.fasta")
